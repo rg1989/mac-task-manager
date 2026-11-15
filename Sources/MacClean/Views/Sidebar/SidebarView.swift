@@ -175,7 +175,9 @@ public struct SidebarView: View {
     /// Sections the user has collapsed. Native `.sidebar` Sections only reveal
     /// a collapse chevron on hover and don't fold on a title click, so we render
     /// our own header rows with an always-visible chevron that fold on tap.
-    @State private var collapsedSections: Set<SidebarSection> = []
+    /// Sections start folded so the sidebar opens on just Processes and Smart
+    /// Scan; a section unfolds when the user opens it or a link lands in it.
+    @State private var collapsedSections: Set<SidebarSection> = Set(SidebarSection.allCases.filter { $0 != .main })
 
     public init(selection: Binding<SidebarItem?>) {
         self._selection = selection
@@ -200,6 +202,13 @@ public struct SidebarView: View {
                 }
             }
             .listStyle(.sidebar)
+            // A deep link or a button elsewhere can select a page inside a
+            // folded section; unfold it so the selection is visible.
+            .onChange(of: selection) { _, item in
+                if let section = item?.section, section != .main {
+                    collapsedSections.remove(section)
+                }
+            }
 
             Divider().opacity(0.4)
 
