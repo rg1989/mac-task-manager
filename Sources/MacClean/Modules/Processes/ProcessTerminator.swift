@@ -64,4 +64,28 @@ enum ProcessTerminator {
         }
         return error.map { .failed($0) } ?? .sent
     }
+
+    /// Quits a process and everything it started. The root gets a normal
+    /// Quit; children that are still alive a moment later get one too, each
+    /// after the same identity check.
+    @MainActor
+    static func terminateTree(
+        root: ProcessSnapshot,
+        members: [ProcessSnapshot],
+        sampler: ProcessSampler
+    ) async -> Outcome {
+        let outcome = await terminate(root, force: false, sampler: sampler)
+        guard outcome == .sent else { return outcome }
+        try? await Task.sleep(for: .milliseconds(1500))
+        let survivors = members.filter { $0.pid != root.pid && kill($0.pid, 0) == 0 }
+        guard !survivors.isEmpty, let live = await sampler.sample() else { return .sent }
+        let ownPID = ProcessInfo.processInfo.processIdentifier
+        for member in survivors {
+            guard let now = live.first(where: { $0.pid == member.pid }),
+                  now.executablePath == member.executablePath,
+                  ProcessListPolicy.quitAbility(for: now, ownPID: ownPID) == .allowed else { continue }
+            kill(member.pid, SIGTERM)
+        }
+        return .sent
+    }
 }

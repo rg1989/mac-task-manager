@@ -156,3 +156,27 @@ quit, own-folder protection for cleanup, upstream pull request.
   `ps` prints the path as it was typed at launch.
 - Process memory uses binary units (1 GB = 1024 MB), as Activity Monitor does.
 - The four menu bar ring cards sit in one row.
+
+## Leftovers view
+
+A third mode on the Processes page, next to List and By app.
+
+- **Candidates** (current user's processes only): headless browsers
+  (`--headless`, Playwright and Puppeteer browser builds, headless shells,
+  browser drivers) and dev servers (a listening TCP port on a runtime such as
+  Node, Bun, Deno, Python, Ruby, PHP, or a command line that names a known
+  server). A helper inside an installed app is not a candidate.
+- **Tree:** a candidate under another candidate is part of that one's tree.
+  Memory, CPU and ports are totals for the tree.
+- **Ownership**, first match wins: a launchd service; a terminal on the
+  process; then, walking up the parents, a coding agent, an installed app, a
+  launchd service or a terminal. If the chain ends at launchd with no match,
+  the item is a leftover.
+- **Data:** `ps -xo pid=,tty=,args= -ww`, `lsof -nP -iTCP -sTCP:LISTEN -Fpn`
+  and `launchctl list`, about 30 ms each, plus the working folder from
+  libproc. They run on every tick while the view is open and every 10 seconds
+  otherwise, to keep the count on the tab current.
+- **Quit** ends the root with a normal Quit, then any child still alive
+  1.5 seconds later. "Quit all leftovers" acts on true leftovers only.
+- `LeftoverDetector` and `ProcessContextParser` are pure and covered by
+  `ProcessSelfCheck`.

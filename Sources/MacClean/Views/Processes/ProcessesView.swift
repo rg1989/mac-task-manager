@@ -9,6 +9,9 @@ struct ProcessesView: View {
     @State private var selected: ProcessSnapshot?
     @State private var pendingQuit: ProcessSnapshot?
     @State private var showQuitConfirm = false
+    @State private var pendingLeftover: LeftoverItem?
+    @State private var showLeftoverConfirm = false
+    @State private var showQuitAllConfirm = false
     @State private var statusMessage: String?
     @State private var showStatus = false
 
@@ -52,6 +55,39 @@ struct ProcessesView: View {
                 "PID \(process.pid)。“退出”会让它自行关闭；“强制退出”会立即结束它，未保存的工作可能会丢失。",
                 "PID \(process.pid). Quit asks it to close. Force Quit ends it at once, and unsaved work may be lost.",
                 "PID \(process.pid). «Завершить» просит процесс закрыться. Принудительное завершение останавливает его сразу, несохранённая работа может быть потеряна."
+            ))
+        }
+        .alert(
+            L10n.tr(
+                "退出“\(pendingLeftover?.title ?? "")”？",
+                "Quit “\(pendingLeftover?.title ?? "")”?",
+                "Завершить «\(pendingLeftover?.title ?? "")»?"
+            ),
+            isPresented: $showLeftoverConfirm,
+            presenting: pendingLeftover
+        ) { item in
+            Button(L10n.tr("取消", "Cancel", "Отмена"), role: .cancel) {}
+            Button(L10n.tr("退出", "Quit", "Завершить"), role: .destructive) { quitLeftovers([item]) }
+        } message: { item in
+            Text(leftoverWarning(for: item))
+        }
+        .alert(
+            L10n.tr(
+                "退出全部 \(model.leftoverCount) 个遗留进程？",
+                "Quit all \(model.leftoverCount) leftovers?",
+                "Завершить все остатки (\(model.leftoverCount))?"
+            ),
+            isPresented: $showQuitAllConfirm
+        ) {
+            Button(L10n.tr("取消", "Cancel", "Отмена"), role: .cancel) {}
+            Button(L10n.tr("全部退出", "Quit All", "Завершить все"), role: .destructive) {
+                quitLeftovers(model.leftovers.filter(\.isLeftover))
+            }
+        } message: {
+            Text(L10n.tr(
+                "只会退出启动程序已不存在的进程。仍被应用、编码助手或终端使用的不受影响。",
+                "Only items whose launcher has exited are quit. Anything still used by an app, a coding agent or a terminal is left running.",
+                "Будут завершены только процессы, чья запустившая программа уже закрыта. То, чем ещё пользуются приложение, агент или терминал, останется."
             ))
         }
         .sheet(item: $selected) { process in
@@ -146,10 +182,11 @@ struct ProcessesView: View {
             Picker(L10n.tr("视图", "View", "Вид"), selection: $model.mode) {
                 Text(L10n.tr("列表", "List", "Список")).tag(ProcessesViewModel.Mode.list)
                 Text(L10n.tr("按应用", "By app", "По приложениям")).tag(ProcessesViewModel.Mode.byApp)
+                Text(leftoversTabTitle).tag(ProcessesViewModel.Mode.leftovers)
             }
             .pickerStyle(.segmented)
             .labelsHidden()
-            .frame(width: 170)
+            .frame(width: 290)
         }
         .padding(.horizontal, 24)
         .padding(.vertical, 12)
@@ -167,6 +204,18 @@ struct ProcessesView: View {
                 Spacer()
             }
             .frame(maxWidth: .infinity)
+        } else if model.mode == .leftovers {
+            ProcessLeftoversView(
+                model: model,
+                onSelect: { selected = $0 },
+                onQuit: { item in
+                    pendingLeftover = item
+                    showLeftoverConfirm = true
+                },
+                onQuitAll: { showQuitAllConfirm = true }
+            )
+            .background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .padding(.horizontal, 24)
         } else {
             ProcessTableView(
                 model: model,
@@ -200,7 +249,68 @@ struct ProcessesView: View {
         .padding(.vertical, 10)
     }
 
+    private var leftoversTabTitle: String {
+        let title = L10n.tr("遗留", "Leftovers", "Остатки")
+        return model.leftoverCount > 0 ? "\(title) \(model.leftoverCount)" : title
+    }
+
+    private func leftoverWarning(for item: LeftoverItem) -> String {
+        let count = item.members.count
+        switch item.ownership {
+        case .leftover:
+            return L10n.tr(
+                "启动它的程序已经退出。将结束 \(count) 个进程。",
+                "Whatever started it has exited. This ends \(count) process(es).",
+                "Запустившая программа завершилась. Будет завершено процессов: \(count)."
+            )
+        case .ownedBy(let name):
+            return L10n.tr(
+                "\(name) 仍在运行，可能正在使用它。将结束 \(count) 个进程。",
+                "\(name) is still running and may be using it. This ends \(count) process(es).",
+                "\(name) ещё работает и может его использовать. Будет завершено процессов: \(count)."
+            )
+        case .terminal:
+            return L10n.tr(
+                "它在一个打开的终端中运行。将结束 \(count) 个进程。",
+                "It is running in an open terminal. This ends \(count) process(es).",
+                "Процесс работает в открытом терминале. Будет завершено процессов: \(count)."
+            )
+        case .service:
+            return L10n.tr(
+                "macOS 将它作为服务运行，退出后可能会自动重新启动。",
+                "macOS runs it as a service, so it may start again by itself.",
+                "macOS запускает его как службу, поэтому он может запуститься снова."
+            )
+        }
+    }
+
+    private func quitLeftovers(_ items: [LeftoverItem]) {
+        Task {
+            var failures: [String] = []
+            for item in items {
+                let outcome = await ProcessTerminator.terminateTree(root: item.root, members: item.members, sampler: model.sampler)
+                if case .failed(let reason) = outcome { failures.append("\(item.title): \(reason)") }
+                if outcome == .protected { failures.append(item.title) }
+            }
+            await model.refreshNow()
+            if !failures.isEmpty {
+                show(L10n.tr(
+                    "无法退出：\(failures.joined(separator: "，"))",
+                    "Could not quit: \(failures.joined(separator: ", "))",
+                    "Не удалось завершить: \(failures.joined(separator: ", "))"
+                ))
+            }
+        }
+    }
+
     private var footerText: String {
+        if model.mode == .leftovers {
+            return L10n.tr(
+                "发现 \(model.leftovers.count) 个，其中 \(model.leftoverCount) 个为遗留",
+                "\(model.leftovers.count) found, \(model.leftoverCount) left behind",
+                "Найдено: \(model.leftovers.count), остатков: \(model.leftoverCount)"
+            )
+        }
         let total = model.processes.count
         let shown = model.mode == .list
             ? model.visibleProcesses.count

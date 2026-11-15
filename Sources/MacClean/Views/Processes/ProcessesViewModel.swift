@@ -8,7 +8,7 @@ import MacCleanKit
 @Observable
 final class ProcessesViewModel {
     enum Mode: String, CaseIterable {
-        case list, byApp
+        case list, byApp, leftovers
     }
 
     /// 60 samples at 2 seconds: the card graphs cover two minutes.
@@ -21,6 +21,8 @@ final class ProcessesViewModel {
     private(set) var memoryHistory: [Double] = []
     private(set) var networkHistory: [Double] = []
     private(set) var readFailed = false
+    /// Headless browsers and dev servers, true leftovers first.
+    private(set) var leftovers: [LeftoverItem] = []
     private(set) var hasLoaded = false
 
     var searchText = ""
@@ -33,6 +35,8 @@ final class ProcessesViewModel {
 
     let sampler = ProcessSampler()
     private let cardsSampler = SystemCardsSampler()
+    private let contextSampler = ProcessContextSampler()
+    private var ticksSinceContext = Int.max
     private var loop: Task<Void, Never>?
 
     var visibleProcesses: [ProcessSnapshot] {
@@ -41,6 +45,11 @@ final class ProcessesViewModel {
             by: sortKey,
             ascending: ascending
         )
+    }
+
+    /// Items nothing owns any more: the number on the Leftovers tab.
+    var leftoverCount: Int {
+        leftovers.filter(\.isLeftover).count
     }
 
     var visibleGroups: [ProcessGroup] {
@@ -102,10 +111,21 @@ final class ProcessesViewModel {
         if let list = await sampler.sample() {
             processes = list
             readFailed = false
+            await refreshLeftovers(from: list)
         } else {
             readFailed = true
         }
         hasLoaded = true
+    }
+
+    /// The extra queries run on every tick while the Leftovers tab is open,
+    /// and every fifth tick (10 s) otherwise, to keep the tab's count fresh.
+    private func refreshLeftovers(from list: [ProcessSnapshot]) async {
+        ticksSinceContext = ticksSinceContext == Int.max ? Int.max : ticksSinceContext + 1
+        guard mode == .leftovers || ticksSinceContext >= 5 else { return }
+        ticksSinceContext = 0
+        let context = await contextSampler.sample(for: list)
+        leftovers = LeftoverDetector.detect(list, context: context)
     }
 
     private static func pushed(_ value: Double, onto history: [Double]) -> [Double] {

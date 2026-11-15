@@ -15,6 +15,11 @@ app.
   process on the Mac.
 - **List and By app views.** By app folds an app's helpers into one row and adds
   up their CPU and memory, so you see what a browser or Docker really costs.
+- **Leftovers view.** Lists headless browsers and dev servers, and marks the
+  ones nothing owns any more: whatever started them has exited, they have no
+  terminal, and macOS does not run them as a service. Coding agents and test
+  tools often leave these behind. Each row shows the ports, the project folder
+  and who started it. Quit one, or quit all leftovers at once.
 - **Details window.** Click a row to see live numbers, the parent process and
   the file location, with Quit, Force Quit and Restart buttons.
 - **Menu bar.** The dropdown keeps the CPU, memory, disk and battery rings in one
@@ -135,5 +140,10 @@ Settings goes to the Mac Sai author.
 
 The dashboard layout follows the structure of
 [NeoHtop](https://github.com/Abdenasser/neohtop). No NeoHtop code is used.
+
+The Leftovers view is inspired by
+[DevDeck](https://github.com/SeanLuis/devdeck), which attributes processes to
+the projects and agents behind them. It is written from scratch here; no
+DevDeck code is used.
 
 BSD 3-Clause, the same license as Mac Sai. See [LICENSE](LICENSE).

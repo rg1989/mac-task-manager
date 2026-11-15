@@ -126,6 +126,84 @@ check(ProcessMemoryFormatter.format(16 * 1_073_741_824) == "16.00 GB", "memory: 
 check(ProcessMemoryFormatter.format(512 * 1_048_576) == "512 MB", "memory: whole megabytes above 10 MB")
 check(ProcessMemoryFormatter.format(5_767_168) == "5.5 MB", "memory: one decimal below 10 MB")
 
+// MARK: Leftovers
+
+let parsedArgs = ProcessContextParser.parseCommandLines("""
+84152 ??       /Library/Frameworks/Python.app/Contents/MacOS/Python mock.py
+  901 ttys003  /bin/zsh -l
+garbage
+""")
+check(parsedArgs.commandLines[84152] == "/Library/Frameworks/Python.app/Contents/MacOS/Python mock.py", "args: full command line kept")
+check(parsedArgs.terminals[84152] == "??" && parsedArgs.terminals[901] == "ttys003", "args: terminal column parsed")
+check(parsedArgs.commandLines.count == 2, "args: garbage line dropped")
+let parsedPorts = ProcessContextParser.parseListeningPorts("p613\nf10\nn*:7000\nf11\nn*:7000\nf12\nn*:5000\np793\nf6\nn127.0.0.1:6379\nf7\nn[::1]:6379\n")
+check(parsedPorts[613] == [5000, 7000], "ports: unique and sorted per pid")
+check(parsedPorts[793] == [6379], "ports: IPv4 and IPv6 on one port count once")
+check(ProcessContextParser.parseLaunchdPIDs("PID\tStatus\tLabel\n91907\t-9\tcom.apple.progressd\n-\t0\tcom.apple.idle\n") == [91907], "launchctl: running jobs only")
+
+let pythonApp = "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/Resources/Python.app/Contents/MacOS/Python"
+let playwright = "/Users/u/Library/Caches/ms-playwright/chromium-1140/chrome-mac/Chromium.app/Contents/MacOS/Chromium"
+let raycastNode = "/Applications/Raycast.app/Contents/Resources/backend/node"
+let world: [ProcessSnapshot] = [
+    proc(1, ppid: 0, uid: 0, "/sbin/launchd", mine: false),
+    proc(100, pythonApp, mem: 24),                                        // orphaned server
+    proc(200, "/opt/homebrew/bin/claude", mem: 300),                      // agent
+    proc(201, ppid: 200, "/bin/zsh"),
+    proc(202, ppid: 201, "/opt/homebrew/bin/node", mem: 150),             // vite under the agent
+    proc(203, ppid: 202, "/opt/homebrew/bin/esbuild", mem: 20),           // its child
+    proc(300, "/Applications/iTerm.app/Contents/MacOS/iTerm2"),
+    proc(301, ppid: 300, "/bin/zsh"),
+    proc(302, ppid: 301, "/opt/homebrew/bin/node", mem: 90),              // server in a terminal
+    proc(400, playwright, mem: 500),                                      // orphaned headless browser
+    proc(401, ppid: 400, playwright, mem: 200),                           // its renderer
+    proc(500, "/Applications/Raycast.app/Contents/MacOS/Raycast"),
+    proc(501, ppid: 500, raycastNode, mem: 60),                           // app-internal node
+    proc(600, "/opt/homebrew/bin/redis-server", mem: 10),                 // a database, not a dev server
+    proc(700, "/opt/homebrew/bin/node", mem: 40),                         // brew service
+    proc(800, "/opt/homebrew/bin/node", mem: 70),                         // node with no port
+]
+let worldContext = ProcessContext(
+    commandLines: [
+        100: pythonApp + " mock.py",
+        200: "claude",
+        202: "node /Users/u/shop/node_modules/.bin/vite --port 5173",
+        203: "/opt/homebrew/bin/esbuild --service=0.21.5 --ping",
+        302: "node server.js",
+        400: playwright + " --headless=new --remote-debugging-pipe",
+        401: playwright + " --type=renderer --headless=new",
+        501: raycastNode + " index.js",
+        600: "/opt/homebrew/bin/redis-server 127.0.0.1:6379",
+        700: "node /opt/homebrew/lib/node_modules/thing/server.js",
+        800: "node build.js",
+    ],
+    terminals: [100: "??", 202: "??", 302: "ttys003", 301: "ttys003", 400: "??", 501: "??", 700: "??"],
+    listeningPorts: [100: [8091], 202: [5173], 302: [3000], 501: [7265], 600: [6379], 700: [9000]],
+    workingDirectories: [100: "/private/tmp/scratch/v2", 202: "/Users/u/shop"],
+    launchdManagedPIDs: [600, 700]
+)
+let found = LeftoverDetector.detect(world, context: worldContext)
+let foundByPID = Dictionary(found.map { ($0.root.pid, $0) }, uniquingKeysWith: { a, _ in a })
+check(Set(foundByPID.keys) == [100, 202, 302, 400, 700], "leftovers: exactly the five servers and browsers are found")
+check(foundByPID[100]?.ownership == .leftover, "orphaned Python server is a leftover")
+check(foundByPID[100]?.title == "Python mock.py", "server title is the runtime and its script")
+check(foundByPID[100]?.ports == [8091] && foundByPID[100]?.workingDirectory == "/private/tmp/scratch/v2", "server carries its port and folder")
+check(foundByPID[202]?.ownership == .ownedBy("Claude"), "server under a running agent is owned by the agent")
+check(foundByPID[202]?.title == "Vite dev server", "vite is recognised from the command line")
+check(foundByPID[202]?.members.map(\.pid) == [202, 203] && foundByPID[202]?.memoryBytes == 170, "a server's children are counted with it")
+check(foundByPID[302]?.ownership == .terminal, "server started in an open terminal is not a leftover")
+check(foundByPID[400]?.ownership == .leftover && foundByPID[400]?.kind == .headlessBrowser, "orphaned headless browser is a leftover")
+check(foundByPID[400]?.title == "Headless Chromium" && foundByPID[400]?.members.count == 2, "browser helpers are folded into the browser")
+check(foundByPID[700]?.ownership == .service, "a launchd service is not a leftover")
+check(foundByPID[501] == nil, "an installed app's internal Node is ignored")
+check(foundByPID[600] == nil, "a database is not a dev server")
+check(foundByPID[800] == nil, "a runtime with no listening port is ignored")
+let retitled = LeftoverDetector.detect(
+    [proc(900, "/Users/u/Library/Application Support/raycast/bin/node", mem: 5)],
+    context: ProcessContext(commandLines: [900: "Raycast Backend"], terminals: [900: "??"], listeningPorts: [900: [7265]])
+)
+check(retitled.first?.title == "node", "a process that retitled itself keeps its plain name")
+check(found.first?.isLeftover == true && found.prefix(2).allSatisfy(\.isLeftover), "leftovers sort first")
+
 // MARK: Live
 
 if CommandLine.arguments.contains("--live") {

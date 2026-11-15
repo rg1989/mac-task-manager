@@ -61,10 +61,19 @@ public actor ProcessSampler {
     }
 
     static func runPS() -> (output: String, pid: Int32)? {
+        runTool("/bin/ps", ["-axo", "pid=,ppid=,uid=,pcpu=,rss=,etime=,comm="])
+    }
+
+    /// Runs a read-only system tool and returns what it printed. The C locale
+    /// keeps numbers in one format whatever the user's language is.
+    static func runTool(
+        _ path: String,
+        _ arguments: [String],
+        requireSuccess: Bool = true
+    ) -> (output: String, pid: Int32)? {
         let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/bin/ps")
-        process.arguments = ["-axo", "pid=,ppid=,uid=,pcpu=,rss=,etime=,comm="]
-        // C locale: decimal point in pcpu, no localized output.
+        process.executableURL = URL(fileURLWithPath: path)
+        process.arguments = arguments
         process.environment = ["LC_ALL": "C"]
         let pipe = Pipe()
         process.standardOutput = pipe
@@ -76,7 +85,7 @@ public actor ProcessSampler {
         }
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
         process.waitUntilExit()
-        guard process.terminationStatus == 0 else { return nil }
+        if requireSuccess, process.terminationStatus != 0 { return nil }
         return (String(decoding: data, as: UTF8.self), process.processIdentifier)
     }
 
