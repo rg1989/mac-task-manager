@@ -8,7 +8,7 @@ public struct ProcessSnapshot: Equatable, Sendable, Identifiable {
     public let ppid: Int32
     public let uid: UInt32
     public let name: String
-    public let executablePath: String
+    public var executablePath: String
     public var cpuPercent: Double
     public var memoryBytes: UInt64
     public let elapsedSeconds: Int

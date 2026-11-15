@@ -25,6 +25,9 @@ public actor ProcessSampler {
         var next: [Int32: (cpuNanos: UInt64, at: TimeInterval)] = [:]
         for index in list.indices where list[index].isOwnedByCurrentUser {
             let pid = list[index].pid
+            // ps prints the path as it was typed at launch ("sleep"); libproc
+            // knows the real location, which grouping by app bundle needs.
+            if let path = Self.path(of: pid) { list[index].executablePath = path }
             guard let usage = Self.usage(of: pid) else { continue }
             list[index].memoryBytes = usage.footprint
             if let before = previous[pid], now > before.at, usage.cpuNanos >= before.cpuNanos {
@@ -64,6 +67,13 @@ public actor ProcessSampler {
         mach_timebase_info(&info)
         return (UInt64(max(info.numer, 1)), UInt64(max(info.denom, 1)))
     }()
+
+    static func path(of pid: Int32) -> String? {
+        var buffer = [CChar](repeating: 0, count: 4096)
+        let length = proc_pidpath(pid, &buffer, UInt32(buffer.count))
+        guard length > 0 else { return nil }
+        return String(decoding: buffer.prefix(Int(length)).map { UInt8(bitPattern: $0) }, as: UTF8.self)
+    }
 
     static func usage(of pid: Int32) -> (cpuNanos: UInt64, footprint: UInt64)? {
         var info = rusage_info_v4()

@@ -177,7 +177,8 @@ struct MenuContentView: View {
 
     private func statGrid(_ s: SystemStatsCollector.SystemStats) -> some View {
         let diskUsed = s.diskTotal > 0 ? Double(s.diskTotal - s.diskFree) / Double(s.diskTotal) : 0
-        return LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
+        // One tight row of four, so the process list below stays in view.
+        return LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 6), count: 4), spacing: 6) {
             ringCard(icon: "cpu", label: "CPU",
                      value: s.cpuUsage, center: "\(Int((s.cpuUsage*100).rounded()))%",
                      sub: nil)
@@ -201,53 +202,60 @@ struct MenuContentView: View {
 
     private func ringCard(icon: String, label: String, value: Double, center: String, sub: String?, detail: String? = nil, forceColor: Color? = nil) -> some View {
         let color = forceColor ?? MenuPalette.barColor(value)
-        return VStack(spacing: 12) {
+        return VStack(spacing: 5) {
             statHeader(icon: icon, label: label, tint: color)
-            RingGauge(value: value, color: color, center: center)
-                .frame(width: 58, height: 58)
+            RingGauge(value: value, color: color, center: center, lineWidth: 4, fontSize: 11)
+                .frame(width: 44, height: 44)
             // Always render the subtitle line (a space when empty) so
             // every card is the same height and the rings line up.
-            VStack(spacing: 3) {
+            VStack(spacing: 1) {
                 Text(sub ?? " ")
-                    .font(.system(size: 10, design: AppLanguage.current.isRightToLeft ? .default : .monospaced))
+                    .font(.system(size: 9, design: AppLanguage.current.isRightToLeft ? .default : .monospaced))
                     .foregroundStyle(MenuPalette.textSecondary)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.6)
                 if let detail {
                     Text(detail)
-                        .font(.system(size: 10, design: AppLanguage.current.isRightToLeft ? .default : .monospaced))
+                        .font(.system(size: 9, design: AppLanguage.current.isRightToLeft ? .default : .monospaced))
                         .foregroundStyle(MenuPalette.textSecondary)
                         .lineLimit(1)
-                        .minimumScaleFactor(0.8)
+                        .minimumScaleFactor(0.6)
                 }
             }
         }
         // Fill the grid row so a card with a detail line and its neighbour
         // stay the same height, rings aligned at the top.
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .padding(16)
-        .glassCard()
+        .padding(.vertical, 8)
+        .padding(.horizontal, 5)
+        .glassCard(cornerRadius: 11)
     }
 
     private func uptimeCard(_ s: SystemStatsCollector.SystemStats) -> some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 5) {
             statHeader(icon: "clock", label: L10n.tr("运行时间", "Uptime", "Время работы"), tint: MenuPalette.teal)
             Text(formatUptime(s.uptime))
-                .font(.system(size: 22, weight: .semibold, design: .rounded))
+                .font(.system(size: 13, weight: .semibold, design: .rounded))
                 .foregroundStyle(.white)
-                .frame(height: 58)
-            Text(" ").font(.system(size: 10, design: .monospaced))
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+                .frame(height: 44)
+            Text(" ").font(.system(size: 9, design: .monospaced))
         }
-        .frame(maxWidth: .infinity, alignment: .top)
-        .padding(16)
-        .glassCard()
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .padding(.vertical, 8)
+        .padding(.horizontal, 5)
+        .glassCard(cornerRadius: 11)
     }
 
     /// Card header: icon + label, centered horizontally above the ring
     /// (no Spacer, so the VStack centers the group).
     private func statHeader(icon: String, label: String, tint: Color) -> some View {
-        HStack(spacing: 6) {
-            Image(systemName: icon).font(.system(size: 11, weight: .semibold)).foregroundStyle(tint)
-            Text(label).font(.system(size: 12, weight: .semibold)).foregroundStyle(MenuPalette.textPrimary)
+        HStack(spacing: 3) {
+            Image(systemName: icon).font(.system(size: 9, weight: .semibold)).foregroundStyle(tint)
+            Text(label).font(.system(size: 10, weight: .semibold)).foregroundStyle(MenuPalette.textPrimary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
         }
     }
 
@@ -472,15 +480,17 @@ struct RingGauge: View {
     let value: Double
     let color: Color
     let center: String
+    var lineWidth: CGFloat = 5
+    var fontSize: CGFloat = 13
 
     var body: some View {
         ZStack {
-            Circle().stroke(Color.white.opacity(0.12), lineWidth: 5)
+            Circle().stroke(Color.white.opacity(0.12), lineWidth: lineWidth)
             Circle()
                 .trim(from: 0, to: min(max(value, 0), 1))
-                .stroke(color.gradient, style: StrokeStyle(lineWidth: 5, lineCap: .round))
+                .stroke(color.gradient, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
                 .rotationEffect(.degrees(-90))
-            Text(center).font(.system(size: 13, weight: .bold, design: .rounded)).foregroundStyle(.white)
+            Text(center).font(.system(size: fontSize, weight: .bold, design: .rounded)).foregroundStyle(.white)
         }
     }
 }
