@@ -103,9 +103,9 @@ The existing Resource Hogs block inside Optimization stays as it is.
 
 ## Fork behaviour
 
-- `MCConstants.isForkBuild = true` switches off the GitHub release check and
-  the Sparkle updater, and Settings shows "Custom build" in place of the update
-  controls. Reason: an update would replace our build with the official one.
+- `MCConstants.isForkBuild = true` makes the release check always report
+  "up to date". Sparkle is already inactive in a build with no feed URL.
+  Reason: an update would replace our build with the official one.
 - `scripts/fork-install.sh`: builds the app bundle for arm64, signs it with the
   local "Apple Development" identity (stable signature, so Full Disk Access is
   granted once), quits the running app, and installs to `/Applications`.
