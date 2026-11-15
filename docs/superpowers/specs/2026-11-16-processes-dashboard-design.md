@@ -141,3 +141,18 @@ Command Line Tools only, so the existing 157 test files cannot run here.
 
 GPU and uptime cards, tree view, pinning, per-process disk I/O, admin-level
 quit, own-folder protection for cleanup, upstream pull request.
+
+## Changes after the first build
+
+- The app is named Task Manager: bundle name, window title, menu bar header
+  and visible text. The executables (`MacClean`, `MacCleanMenu`) and the bundle
+  identifier (`com.macclean.app`) keep their names.
+- A click on a process row opens a details sheet with live numbers and Quit,
+  Force Quit and Restart. Restart quits the app's main process, waits up to
+  10 seconds for it to exit, and opens the bundle again.
+- Rows show an app's display name from its `Info.plist`. The quit protection
+  matches the executable file name, so a renamed bundle stays protected.
+- libproc supplies the full executable path for the user's own processes;
+  `ps` prints the path as it was typed at launch.
+- Process memory uses binary units (1 GB = 1024 MB), as Activity Monitor does.
+- The four menu bar ring cards sit in one row.
