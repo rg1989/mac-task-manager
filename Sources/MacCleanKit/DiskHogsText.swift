@@ -34,9 +34,9 @@ public enum DiskHogsText {
     }
     public static var dockerDiskImageNote: String {
         L10n.tr(
-            "Docker 的虚拟磁盘，里面存放着你所有的镜像、容器和卷，所以 Mac Sai 绝不会删除它。清理 Docker 项目会释放其中的空间，Docker Desktop 随后会把空间还给 macOS。如需限制它的大小，请在 Docker Desktop 的“资源”设置中调低磁盘上限。",
-            "Docker's virtual disk. It holds all your images, containers, and volumes, so Mac Sai never deletes it. Pruning Docker items frees space inside it, and Docker Desktop then gives that space back to macOS. To cap its size, lower the disk limit in Docker Desktop's Resources settings.",
-            "Виртуальный диск Docker. На нём хранятся все образы, контейнеры и тома, поэтому Mac Sai никогда его не удаляет. Очистка элементов Docker освобождает место внутри него, а Docker Desktop затем возвращает это место macOS. Чтобы ограничить его размер, уменьшите лимит диска в настройках ресурсов Docker Desktop."
+            "Docker 的虚拟磁盘，里面存放着你所有的镜像、容器和卷，所以 Task Manager 绝不会删除它。清理 Docker 项目会释放其中的空间，Docker Desktop 随后会把空间还给 macOS。如需限制它的大小，请在 Docker Desktop 的“资源”设置中调低磁盘上限。",
+            "Docker's virtual disk. It holds all your images, containers, and volumes, so Task Manager never deletes it. Pruning Docker items frees space inside it, and Docker Desktop then gives that space back to macOS. To cap its size, lower the disk limit in Docker Desktop's Resources settings.",
+            "Виртуальный диск Docker. На нём хранятся все образы, контейнеры и тома, поэтому Task Manager никогда его не удаляет. Очистка элементов Docker освобождает место внутри него, а Docker Desktop затем возвращает это место macOS. Чтобы ограничить его размер, уменьшите лимит диска в настройках ресурсов Docker Desktop."
         )
     }
     public static var nothingFound: String {

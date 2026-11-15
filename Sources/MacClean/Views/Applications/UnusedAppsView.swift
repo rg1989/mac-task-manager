@@ -62,7 +62,7 @@ struct UnusedAppsView: View {
                             .font(.system(size: 13, weight: .medium))
                         Text(L10n.tr(
                             "无法判断哪些应用未被使用。请检查 Spotlight 索引是否已开启。",
-                            "Mac Sai can't tell which apps are unused. Check that Spotlight indexing is turned on.",
+                            "Task Manager can't tell which apps are unused. Check that Spotlight indexing is turned on.",
                             "Невозможно определить неиспользуемые приложения. Проверьте, что индексация Spotlight включена."
                         ))
                         .font(.system(size: 12))

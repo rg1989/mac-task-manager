@@ -13,9 +13,9 @@ final class SelfUpdateAlerts: NSObject, NSWindowDelegate {
             present(
                 title: L10n.tr("更新已准备就绪", "An update is ready to install", "Обновление готово к установке"),
                 message: L10n.tr(
-                    "Mac Sai 仍在完成当前操作。您可以等待操作完成后退出并安装更新，或留在应用中。",
-                    "Mac Sai is still finishing an operation. You can wait, then quit and install the update, or stay in the app.",
-                    "Mac Sai ещё выполняет операцию. Можно дождаться её завершения, выйти и установить обновление или остаться в приложении."),
+                    "Task Manager 仍在完成当前操作。您可以等待操作完成后退出并安装更新，或留在应用中。",
+                    "Task Manager is still finishing an operation. You can wait, then quit and install the update, or stay in the app.",
+                    "Task Manager ещё выполняет операцию. Можно дождаться её завершения, выйти и установить обновление или остаться в приложении."),
                 primary: L10n.tr("等待并退出", "Wait and Quit", "Дождаться и выйти"),
                 secondary: L10n.tr("留在应用中", "Stay in App", "Остаться в приложении"),
                 completion: { continuation.resume(returning: $0) })

@@ -40,9 +40,9 @@ public enum DockerDiskCategory: String, Equatable, Sendable, CaseIterable, Ident
             )
         case .volumes:
             L10n.tr(
-                "卷可能保存着数据库等数据，Mac Sai 不会清理它们。如需删除，请使用 Docker Desktop 或 Docker 命令行。",
-                "Volumes can hold database data, so Mac Sai leaves them alone. To remove them, use Docker Desktop or the Docker CLI.",
-                "Тома могут хранить данные баз данных, поэтому Mac Sai их не трогает. Чтобы удалить их, используйте Docker Desktop или Docker CLI."
+                "卷可能保存着数据库等数据，Task Manager 不会清理它们。如需删除，请使用 Docker Desktop 或 Docker 命令行。",
+                "Volumes can hold database data, so Task Manager leaves them alone. To remove them, use Docker Desktop or the Docker CLI.",
+                "Тома могут хранить данные баз данных, поэтому Task Manager их не трогает. Чтобы удалить их, используйте Docker Desktop или Docker CLI."
             )
         case .buildCache:
             L10n.tr(

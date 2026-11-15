@@ -142,14 +142,14 @@ struct ContentView: View {
             switch pending.action {
             case .brewCommand(let cmd):
                 Text(L10n.tr(
-                    "Mac Sai \(pending.version) 已发布。使用 Homebrew 升级：\n\(cmd)",
-                    "Mac Sai \(pending.version) is available. Upgrade with Homebrew:\n\(cmd)",
-                    "Доступна версия Mac Sai \(pending.version). Обновите через Homebrew:\n\(cmd)"))
+                    "Task Manager \(pending.version) 已发布。使用 Homebrew 升级：\n\(cmd)",
+                    "Task Manager \(pending.version) is available. Upgrade with Homebrew:\n\(cmd)",
+                    "Доступна версия Task Manager \(pending.version). Обновите через Homebrew:\n\(cmd)"))
             case .openRelease:
                 Text(L10n.tr(
-                    "Mac Sai \(pending.version) 已发布。",
-                    "Mac Sai \(pending.version) is available.",
-                    "Доступна версия Mac Sai \(pending.version)."))
+                    "Task Manager \(pending.version) 已发布。",
+                    "Task Manager \(pending.version) is available.",
+                    "Доступна версия Task Manager \(pending.version)."))
             }
         }
     }
