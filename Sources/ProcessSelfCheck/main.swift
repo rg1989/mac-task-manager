@@ -113,6 +113,10 @@ check(ProcessListPolicy.quitAbility(for: groups.first { $0.kind == .system }!, o
 let top = ProcessListPolicy.topConsumers(sample, limit: 3)
 check(top.map(\.name) == ["Terminal", "Google Chrome", "WindowServer"], "top consumers: app groups and single processes by cpu")
 
+check(ProcessMemoryFormatter.format(16 * 1_073_741_824) == "16.00 GB", "memory: 16 GiB reads 16.00 GB")
+check(ProcessMemoryFormatter.format(512 * 1_048_576) == "512 MB", "memory: whole megabytes above 10 MB")
+check(ProcessMemoryFormatter.format(5_767_168) == "5.5 MB", "memory: one decimal below 10 MB")
+
 // MARK: Live
 
 if CommandLine.arguments.contains("--live") {

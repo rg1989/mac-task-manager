@@ -43,18 +43,18 @@ struct ProcessStatCards: View {
 
     private var memoryCard: some View {
         card(icon: "memorychip", title: L10n.tr("内存", "Memory", "Память"), tint: memoryTint) {
-            bigValue(cards.map { FileSizeFormatter.format($0.memory.used) } ?? "--")
+            bigValue(cards.map { ProcessMemoryFormatter.format($0.memory.used) } ?? "--")
             caption(cards.map {
                 L10n.tr(
-                    "共 \(FileSizeFormatter.format($0.memory.total))",
-                    "used of \(FileSizeFormatter.format($0.memory.total))",
-                    "из \(FileSizeFormatter.format($0.memory.total))"
+                    "共 \(ProcessMemoryFormatter.format($0.memory.total))",
+                    "used of \(ProcessMemoryFormatter.format($0.memory.total))",
+                    "из \(ProcessMemoryFormatter.format($0.memory.total))"
                 )
             } ?? " ")
             Spacer(minLength: 4)
             detailLine(
                 L10n.tr("交换", "Swap", "Подкачка"),
-                cards.map { FileSizeFormatter.format($0.memory.swapUsed) } ?? "--"
+                cards.map { ProcessMemoryFormatter.format($0.memory.swapUsed) } ?? "--"
             )
             Sparkline(values: memoryHistory, tint: memoryTint).frame(height: 22)
         }

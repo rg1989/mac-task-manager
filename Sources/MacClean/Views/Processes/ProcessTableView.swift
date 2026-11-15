@@ -185,7 +185,7 @@ private struct ProcessRowView: View {
             NumberCell(text: String(process.pid), width: ProcessColumns.pid)
             NumberCell(text: ProcessFormat.userName(process.uid), width: ProcessColumns.user)
             NumberCell(text: ProcessFormat.cpu(process.cpuPercent), width: ProcessColumns.cpu, emphasized: process.cpuPercent >= 50)
-            NumberCell(text: FileSizeFormatter.format(process.memoryBytes), width: ProcessColumns.memory)
+            NumberCell(text: ProcessMemoryFormatter.format(process.memoryBytes), width: ProcessColumns.memory)
             NumberCell(text: ProcessFormat.runtime(process.elapsedSeconds), width: ProcessColumns.runtime)
 
             HStack(spacing: 10) {
@@ -289,7 +289,7 @@ private struct ProcessGroupRowView: View {
             NumberCell(text: "", width: ProcessColumns.pid)
             NumberCell(text: "", width: ProcessColumns.user)
             NumberCell(text: ProcessFormat.cpu(group.cpuPercent), width: ProcessColumns.cpu, emphasized: group.cpuPercent >= 50)
-            NumberCell(text: FileSizeFormatter.format(group.memoryBytes), width: ProcessColumns.memory, emphasized: true)
+            NumberCell(text: ProcessMemoryFormatter.format(group.memoryBytes), width: ProcessColumns.memory, emphasized: true)
             NumberCell(text: "", width: ProcessColumns.runtime)
 
             HStack(spacing: 10) {

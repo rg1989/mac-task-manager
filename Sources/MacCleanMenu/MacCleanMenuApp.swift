@@ -279,7 +279,7 @@ struct MenuContentView: View {
                         .font(.system(size: 11).monospacedDigit())
                         .foregroundStyle(MenuPalette.textPrimary)
                         .frame(width: 50, alignment: .trailing)
-                    Text(FileSizeFormatter.format(entry.memoryBytes))
+                    Text(ProcessMemoryFormatter.format(entry.memoryBytes))
                         .font(.system(size: 11).monospacedDigit())
                         .foregroundStyle(MenuPalette.textSecondary)
                         .frame(width: 66, alignment: .trailing)

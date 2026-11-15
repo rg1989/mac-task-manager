@@ -36,3 +36,14 @@ public struct ProcessSnapshot: Equatable, Sendable, Identifiable {
         self.isOwnedByCurrentUser = isOwnedByCurrentUser
     }
 }
+
+/// Memory in binary units (1 GB = 1024 MB), the convention Activity Monitor
+/// uses. `FileSizeFormatter` is decimal, which shows a 16 GB Mac as 17.18 GB.
+public enum ProcessMemoryFormatter {
+    public static func format(_ bytes: UInt64) -> String {
+        let megabytes = Double(bytes) / 1_048_576
+        if megabytes >= 1024 { return String(format: "%.2f GB", megabytes / 1024) }
+        if megabytes >= 10 { return String(format: "%.0f MB", megabytes) }
+        return String(format: "%.1f MB", megabytes)
+    }
+}
