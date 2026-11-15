@@ -84,7 +84,7 @@ import MacCleanKit
 //   swift run ProcessSelfCheck --live   also sample this Mac and print a summary
 
 var failures = 0
-func check(_ condition: @autoclosure () -> Bool, _ message: String) {
+@MainActor func check(_ condition: @autoclosure () -> Bool, _ message: String) {
     if condition() {
         print("ok    \(message)")
     } else {

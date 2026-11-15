@@ -37,6 +37,11 @@ let package = Package(
             dependencies: [],
             path: "Sources/MacCleanKit"
         ),
+        .executableTarget(
+            name: "ProcessSelfCheck",
+            dependencies: ["MacCleanKit"],
+            path: "Sources/ProcessSelfCheck"
+        ),
         .target(
             name: "MacCleanTestSupport",
             dependencies: ["MacCleanKit"],
