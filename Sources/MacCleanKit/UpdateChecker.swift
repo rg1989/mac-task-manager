@@ -97,6 +97,7 @@ public enum UpdateChecker {
         session: URLSession = .shared,
         isHomebrew: Bool = isHomebrewInstall()
     ) async -> CheckResult {
+        if MCConstants.isForkBuild { return .upToDate }
         let sourceURL = updateSourceURL(isHomebrew: isHomebrew)
         var request = URLRequest(url: sourceURL, timeoutInterval: 10)
         request.setValue(

@@ -67,6 +67,7 @@ struct MacCleanMenuApp: App {
                 devices: model.devices,
                 protection: model.protection,
                 tips: model.tips,
+                topProcesses: model.topProcesses,
                 onDismissTip: { model.dismissTip(id: $0) }
             )
             .environment(\.locale, Locale(identifier: appLanguage.localeIdentifier))
@@ -123,6 +124,7 @@ struct MenuContentView: View {
     let devices: ConnectedDevices?
     let protection: SharedAppState.ProtectionStatus?
     let tips: [TipsEngine.Tip]
+    let topProcesses: [ProcessGroup]
     let onDismissTip: (String) -> Void
 
     var body: some View {
@@ -136,6 +138,7 @@ struct MenuContentView: View {
                 if let stats {
                     statGrid(stats)
                     networkCard(stats)
+                    if !topProcesses.isEmpty { topProcessesCard }
                     if !tips.isEmpty { recommendationsCard }
                     if let p = protection { protectionCard(p) }
                     if let d = devices, d.hasAny { devicesCard(d) }
@@ -249,6 +252,54 @@ struct MenuContentView: View {
     }
 
     // MARK: Network strip
+
+    // MARK: Top processes
+
+    private var topProcessesCard: some View {
+        VStack(alignment: .leading, spacing: 7) {
+            HStack {
+                sectionHeader(
+                    icon: "list.bullet.rectangle",
+                    title: L10n.tr("占用最高的进程", "Top processes", "Топ процессов"),
+                    tint: MenuPalette.teal
+                )
+                Text("CPU · RAM")
+                    .font(.system(size: 9))
+                    .foregroundStyle(MenuPalette.textSecondary)
+            }
+            ForEach(topProcesses) { entry in
+                HStack(spacing: 6) {
+                    Text(entry.name)
+                        .font(.system(size: 11))
+                        .foregroundStyle(MenuPalette.textPrimary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                    Spacer(minLength: 6)
+                    Text(String(format: "%.1f%%", entry.cpuPercent))
+                        .font(.system(size: 11).monospacedDigit())
+                        .foregroundStyle(MenuPalette.textPrimary)
+                        .frame(width: 50, alignment: .trailing)
+                    Text(FileSizeFormatter.format(entry.memoryBytes))
+                        .font(.system(size: 11).monospacedDigit())
+                        .foregroundStyle(MenuPalette.textSecondary)
+                        .frame(width: 66, alignment: .trailing)
+                }
+            }
+            Button {
+                TipAction.open(moduleID: "processes")
+            } label: {
+                Text(L10n.tr("打开进程", "Open Processes", "Открыть процессы"))
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(MenuPalette.textPrimary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 5)
+                    .background(Color.white.opacity(0.10), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(11)
+        .glassCard()
+    }
 
     private func networkCard(_ s: SystemStatsCollector.SystemStats) -> some View {
         HStack(spacing: 0) {

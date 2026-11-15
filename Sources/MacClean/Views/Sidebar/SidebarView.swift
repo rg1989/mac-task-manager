@@ -3,6 +3,7 @@ import MacCleanKit
 
 public enum SidebarItem: String, CaseIterable, Identifiable {
     // Main
+    case processes = "进程"
     case smartScan = "智能扫描"
 
     // Cleanup
@@ -51,6 +52,7 @@ public enum SidebarItem: String, CaseIterable, Identifiable {
     /// Stable slug used in `macclean://module/<id>` deep links.
     public var deepLinkID: String {
         switch self {
+        case .processes: "processes"
         case .smartScan: "smart-scan"
         case .systemJunk: "system-junk"
         case .mailAttachments: "mail-attachments"
@@ -84,6 +86,7 @@ public enum SidebarItem: String, CaseIterable, Identifiable {
 
     public var icon: String {
         switch self {
+        case .processes: "list.bullet.rectangle"
         case .smartScan: "sparkle.magnifyingglass"
         case .systemJunk: "trash.circle"
         case .mailAttachments: "paperclip.circle"
@@ -112,6 +115,7 @@ public enum SidebarItem: String, CaseIterable, Identifiable {
 
     public var theme: ModuleTheme {
         switch self {
+        case .processes: .performance
         case .smartScan: .smartScan
         case .systemJunk, .mailAttachments, .trashBins, .projectJunk, .diskHogs, .cleanHistory: .cleanup
         case .malwareRemoval, .privacy, .browserExtensions, .wifiNetworks, .appPermissions: .protection
@@ -124,6 +128,7 @@ public enum SidebarItem: String, CaseIterable, Identifiable {
 
     public var section: SidebarSection {
         switch self {
+        case .processes: .main
         case .smartScan: .main
         case .systemJunk, .mailAttachments, .trashBins, .projectJunk, .diskHogs, .cleanHistory: .cleanup
         case .malwareRemoval, .privacy, .browserExtensions, .wifiNetworks, .appPermissions: .protection

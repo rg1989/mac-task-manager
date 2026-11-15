@@ -258,6 +258,9 @@ public enum MCConstants {
     public static let supportURL = URL(string: "https://buymeacoffee.com/iliyami")!
     /// Opened from the Supporters row in Settings. Never fetched either.
     public static let membershipURL = URL(string: "https://buymeacoffee.com/iliyami/membership")!
+    /// This build is a private fork. An update from upstream would replace it
+    /// with the official app, so update checks are off.
+    public static let isForkBuild = true
     public static let latestReleaseAPI = URL(string: "https://api.github.com/repos/iliyami/MacSai/releases/latest")!
     /// Homebrew's public API for the official cask. Its `version` reflects what
     /// `brew upgrade --cask mac-sai` can actually install right now (autobump

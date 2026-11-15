@@ -24,12 +24,14 @@ final class MenuStatsModel {
     private(set) var devices: ConnectedDevices?
     private(set) var protection: SharedAppState.ProtectionStatus?
     private(set) var tips: [TipsEngine.Tip] = []
+    private(set) var topProcesses: [ProcessGroup] = []
 
     private let statsCollector = SystemStatsCollector()
     private let networkMonitor = NetworkSpeedMonitor()
     private let devicesCollector = ConnectedDevicesCollector()
     private let tipsEngine = TipsEngine()
     private let healthMonitor = HealthMonitor()
+    private let processSampler = ProcessSampler()
 
     private var pollingTask: Task<Void, Never>?
     private var tickCount = 0
@@ -62,6 +64,10 @@ final class MenuStatsModel {
             }
             if let n = await timed("network", budget: .seconds(2), { await self.networkMonitor.measure() }) {
                 networkSpeed = n
+            }
+            if let sampled = await timed("processes", budget: .seconds(2), { await self.processSampler.sample() }),
+               let list = sampled {
+                topProcesses = ProcessListPolicy.topConsumers(list, limit: 5)
             }
             protection = SharedAppState.protectionStatus
             tickCount += 1

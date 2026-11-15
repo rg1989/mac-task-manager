@@ -191,6 +191,8 @@ struct ContentView: View {
     @ViewBuilder
     private func moduleView(for item: SidebarItem) -> some View {
         switch item {
+        case .processes:
+            ProcessesView()
         case .smartScan:
             SmartScanView()
         case .systemJunk:

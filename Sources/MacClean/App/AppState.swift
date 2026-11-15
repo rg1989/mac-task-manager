@@ -3,7 +3,7 @@ import MacCleanKit
 
 @Observable
 public final class AppState {
-    var selectedSidebarItem: SidebarItem? = .smartScan
+    var selectedSidebarItem: SidebarItem? = .processes
     var scanCoordinator = ScanCoordinator()
     let cleaningEngine = CleaningEngine()
     let scanResultsStore = ScanResultsStore()

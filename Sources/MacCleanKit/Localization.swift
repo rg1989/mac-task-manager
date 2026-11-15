@@ -1702,6 +1702,7 @@ public enum L10n {
     /// through model properties. Most UI strings use the three-argument overload
     /// so every supported translation lives beside the original expression.
     private static let englishFallbacks: [String: String] = [
+        "进程": "Processes",
         "智能扫描": "Smart Scan",
         "系统垃圾": "System Junk",
         "邮件附件": "Mail Attachments",
