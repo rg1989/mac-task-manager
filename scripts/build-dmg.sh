@@ -27,7 +27,7 @@
 
 set -euo pipefail
 
-APP_NAME="Mac Sai"
+APP_NAME="Task Manager"
 BUNDLE_ID="com.macclean.app"
 VERSION="${VERSION:-$(cat VERSION 2>/dev/null | tr -d '[:space:]' || echo '1.0.0')}"
 BUILD_NUMBER="${BUILD_NUMBER:-${VERSION%%-*}}"
@@ -238,9 +238,9 @@ cat > "${MENU_APP}/Contents/Info.plist" << MENU_PLIST
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
-    <string>Mac Sai Menu</string>
+    <string>Task Manager Menu</string>
     <key>CFBundleDisplayName</key>
-    <string>Mac Sai Menu</string>
+    <string>Task Manager Menu</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>

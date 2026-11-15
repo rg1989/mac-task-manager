@@ -8,7 +8,9 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-APP_NAME="Mac Sai"
+APP_NAME="Task Manager"
+# The name this fork was installed under before it was renamed.
+OLD_DEST="/Applications/Mac Sai.app"
 APP_BUNDLE=".build/dmg/${APP_NAME}.app"
 DEST="/Applications/${APP_NAME}.app"
 
@@ -24,13 +26,13 @@ fi
 
 codesign --verify --deep --strict "${APP_BUNDLE}"
 
-osascript -e "tell application \"${APP_NAME}\" to quit" >/dev/null 2>&1 || true
+osascript -e "tell application id \"com.macclean.app\" to quit" >/dev/null 2>&1 || true
 pkill -x MacCleanMenu 2>/dev/null || true
 pkill -x MacClean 2>/dev/null || true
 sleep 1
 
 echo "Installing to ${DEST}..."
-rm -rf "${DEST}"
+rm -rf "${DEST}" "${OLD_DEST}"
 ditto "${APP_BUNDLE}" "${DEST}"
 open "${DEST}"
 echo "Installed. To return to the official app: brew install --cask mac-sai"
