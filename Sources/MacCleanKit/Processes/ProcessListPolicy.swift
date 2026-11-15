@@ -56,8 +56,10 @@ public struct ProcessGroup: Equatable, Sendable, Identifiable {
 /// Pure rules for the Processes page: search, filter, sort, grouping and
 /// which rows may be quit.
 public enum ProcessListPolicy {
-    /// Executable names that never get a Quit button. Quitting these ends or
-    /// freezes the login session; `MacClean` and `MacCleanMenu` are this app.
+    /// Executable file names that never get a Quit button. Quitting these ends
+    /// or freezes the login session; `MacClean` and `MacCleanMenu` are this
+    /// app's own executables. Matched against the file name, not the display
+    /// name, so renaming an app bundle cannot lift the protection.
     public static let protectedNames: Set<String> = [
         "kernel_task", "launchd", "WindowServer", "loginwindow",
         "Finder", "Dock", "SystemUIServer", "MacClean", "MacCleanMenu",
@@ -65,6 +67,16 @@ public enum ProcessListPolicy {
 
     static let backgroundKey = "background"
     static let systemKey = "system"
+
+    /// The bundle whose main executable this is: the path up to `.app` when
+    /// the file sits directly in that bundle's `Contents/MacOS`. nil for
+    /// helpers stored elsewhere in a bundle and for plain binaries.
+    public static func owningBundlePath(forExecutable path: String) -> String? {
+        let marker = ".app/Contents/MacOS/"
+        guard let range = path.range(of: marker, options: .backwards),
+              !path[range.upperBound...].contains("/") else { return nil }
+        return String(path[..<range.lowerBound]) + ".app"
+    }
 
     /// The outermost `.app` bundle that contains the executable, if any.
     public static func appBundlePath(forExecutable path: String) -> String? {
@@ -210,7 +222,8 @@ public enum ProcessListPolicy {
     }
 
     public static func quitAbility(for process: ProcessSnapshot, ownPID: Int32) -> QuitAbility {
-        if process.pid <= 1 || process.pid == ownPID || protectedNames.contains(process.name) {
+        let executable = (process.executablePath as NSString).lastPathComponent
+        if process.pid <= 1 || process.pid == ownPID || protectedNames.contains(executable) {
             return .protected
         }
         return process.isOwnedByCurrentUser ? .allowed : .notOwned

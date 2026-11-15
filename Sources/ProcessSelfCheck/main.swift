@@ -107,6 +107,15 @@ check(ProcessListPolicy.quitAbility(for: sample[2], ownPID: 4391) == .protected,
 check(ProcessListPolicy.quitAbility(for: sample[2], ownPID: 5) == .allowed, "own app can be quit")
 check(ProcessListPolicy.quitAbility(for: proc(60, uid: 0, "/usr/sbin/cfprefsd", mine: false), ownPID: 5) == .notOwned, "another user's process cannot be quit")
 check(ProcessListPolicy.quitAbility(for: proc(61, "/Applications/Mac Sai.app/Contents/MacOS/MacClean"), ownPID: 5) == .protected, "Mac Sai itself is protected")
+let renamed = ProcessSnapshot(
+    pid: 62, ppid: 1, uid: 501, name: "Task Manager",
+    executablePath: "/Applications/Task Manager.app/Contents/MacOS/MacClean",
+    cpuPercent: 0, memoryBytes: 0, elapsedSeconds: 1, isOwnedByCurrentUser: true
+)
+check(ProcessListPolicy.quitAbility(for: renamed, ownPID: 5) == .protected, "protection follows the executable file, not the display name")
+check(ProcessListPolicy.owningBundlePath(forExecutable: chrome) == "/Applications/Google Chrome.app", "main executable belongs to its bundle")
+check(ProcessListPolicy.owningBundlePath(forExecutable: chromeHelper)?.hasSuffix("Google Chrome Helper.app") == true, "nested helper belongs to its own inner bundle")
+check(ProcessListPolicy.owningBundlePath(forExecutable: "/Applications/X.app/Contents/Frameworks/tool") == nil, "a file elsewhere in a bundle has no owning bundle")
 check(ProcessListPolicy.quitAbility(for: chromeGroup!, ownPID: 5) == .allowed, "app group quits through its main process")
 check(ProcessListPolicy.quitAbility(for: groups.first { $0.kind == .system }!, ownPID: 5) == .protected, "the System bucket has no quit")
 

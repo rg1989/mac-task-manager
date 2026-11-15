@@ -12,6 +12,8 @@ import Darwin
 public actor ProcessSampler {
     private var previous: [Int32: (cpuNanos: UInt64, at: TimeInterval)] = [:]
     private let currentUID: UInt32
+    /// Display names by bundle path. An app's name does not change while it runs.
+    private var displayNames: [String: String] = [:]
 
     public init() {
         currentUID = getuid()
@@ -21,13 +23,19 @@ public actor ProcessSampler {
     public func sample() -> [ProcessSnapshot]? {
         guard let (text, psPID) = Self.runPS() else { return nil }
         var list = PSOutputParser.parse(text, currentUID: currentUID).filter { $0.pid != psPID }
+        for index in list.indices {
+            if let name = displayName(forExecutable: list[index].executablePath) { list[index].name = name }
+        }
         let now = ProcessInfo.processInfo.systemUptime
         var next: [Int32: (cpuNanos: UInt64, at: TimeInterval)] = [:]
         for index in list.indices where list[index].isOwnedByCurrentUser {
             let pid = list[index].pid
             // ps prints the path as it was typed at launch ("sleep"); libproc
             // knows the real location, which grouping by app bundle needs.
-            if let path = Self.path(of: pid) { list[index].executablePath = path }
+            if let path = Self.path(of: pid), path != list[index].executablePath {
+                list[index].executablePath = path
+                if let name = displayName(forExecutable: path) { list[index].name = name }
+            }
             guard let usage = Self.usage(of: pid) else { continue }
             list[index].memoryBytes = usage.footprint
             if let before = previous[pid], now > before.at, usage.cpuNanos >= before.cpuNanos {
@@ -38,6 +46,18 @@ public actor ProcessSampler {
         }
         previous = next
         return list
+    }
+
+    /// The name the app shows in Finder and the Dock, for a bundle's main
+    /// executable. Executable file names are often internal ("MacClean" for
+    /// this app), which is confusing in a process list.
+    private func displayName(forExecutable path: String) -> String? {
+        guard let bundle = ProcessListPolicy.owningBundlePath(forExecutable: path) else { return nil }
+        if let cached = displayNames[bundle] { return cached.isEmpty ? nil : cached }
+        let info = NSDictionary(contentsOfFile: bundle + "/Contents/Info.plist")
+        let name = (info?["CFBundleDisplayName"] as? String) ?? (info?["CFBundleName"] as? String) ?? ""
+        displayNames[bundle] = name
+        return name.isEmpty ? nil : name
     }
 
     static func runPS() -> (output: String, pid: Int32)? {
