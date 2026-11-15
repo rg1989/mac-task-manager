@@ -32,4 +32,36 @@ enum ProcessTerminator {
         let code = errno
         return code == ESRCH ? .gone : .failed(String(cString: strerror(code)))
     }
+
+    /// Quits an app through its main process, waits for it to exit, then
+    /// opens the bundle again. Uses a plain Quit so the app can save its state.
+    @MainActor
+    static func restart(_ main: ProcessSnapshot, bundlePath: String, sampler: ProcessSampler) async -> Outcome {
+        let outcome = await terminate(main, force: false, sampler: sampler)
+        guard outcome == .sent else { return outcome }
+        var hasExited = false
+        for _ in 0..<20 {
+            try? await Task.sleep(for: .milliseconds(500))
+            if kill(main.pid, 0) != 0 {
+                hasExited = true
+                break
+            }
+        }
+        guard hasExited else {
+            return .failed(L10n.tr(
+                "应用没有退出，可能在等待你保存",
+                "the app did not quit; it may be waiting for you to save",
+                "приложение не закрылось; возможно, оно ждёт сохранения"
+            ))
+        }
+        let error: String? = await withCheckedContinuation { continuation in
+            NSWorkspace.shared.openApplication(
+                at: URL(fileURLWithPath: bundlePath),
+                configuration: NSWorkspace.OpenConfiguration()
+            ) { _, error in
+                continuation.resume(returning: error?.localizedDescription)
+            }
+        }
+        return error.map { .failed($0) } ?? .sent
+    }
 }

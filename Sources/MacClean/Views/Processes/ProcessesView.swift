@@ -6,6 +6,7 @@ import MacCleanKit
 struct ProcessesView: View {
     @Environment(AppState.self) private var appState
     @State private var model = ProcessesViewModel()
+    @State private var selected: ProcessSnapshot?
     @State private var pendingQuit: ProcessSnapshot?
     @State private var showQuitConfirm = false
     @State private var statusMessage: String?
@@ -52,6 +53,9 @@ struct ProcessesView: View {
                 "PID \(process.pid). Quit asks it to close. Force Quit ends it at once, and unsaved work may be lost.",
                 "PID \(process.pid). «Завершить» просит процесс закрыться. Принудительное завершение останавливает его сразу, несохранённая работа может быть потеряна."
             ))
+        }
+        .sheet(item: $selected) { process in
+            ProcessDetailSheet(model: model, selected: process)
         }
         .alert(statusMessage ?? "", isPresented: $showStatus) {
             Button("OK") {}
@@ -164,10 +168,14 @@ struct ProcessesView: View {
             }
             .frame(maxWidth: .infinity)
         } else {
-            ProcessTableView(model: model) { process in
-                pendingQuit = process
-                showQuitConfirm = true
-            }
+            ProcessTableView(
+                model: model,
+                onSelect: { selected = $0 },
+                onQuit: { process in
+                    pendingQuit = process
+                    showQuitConfirm = true
+                }
+            )
             .background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
             .padding(.horizontal, 24)
         }

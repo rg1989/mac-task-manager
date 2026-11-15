@@ -17,6 +17,7 @@ enum ProcessColumns {
 /// (expandable) in By app mode.
 struct ProcessTableView: View {
     @Bindable var model: ProcessesViewModel
+    let onSelect: (ProcessSnapshot) -> Void
     let onQuit: (ProcessSnapshot) -> Void
 
     private let ownPID = ProcessInfo.processInfo.processIdentifier
@@ -38,6 +39,11 @@ struct ProcessTableView: View {
                                 isExpanded: model.expandedGroups.contains(group.id),
                                 ability: ProcessListPolicy.quitAbility(for: group, ownPID: ownPID),
                                 onToggle: { model.toggleGroup(group.id) },
+                                onSelect: {
+                                    if let main = group.members.first(where: { $0.pid == group.mainPID }) {
+                                        onSelect(main)
+                                    }
+                                },
                                 onQuit: {
                                     if let main = group.members.first(where: { $0.pid == group.mainPID }) {
                                         onQuit(main)
@@ -61,6 +67,7 @@ struct ProcessTableView: View {
             process: process,
             indent: indent,
             ability: ProcessListPolicy.quitAbility(for: process, ownPID: ownPID),
+            onSelect: { onSelect(process) },
             onQuit: { onQuit(process) }
         )
     }
@@ -165,9 +172,9 @@ private struct ProcessRowView: View {
     let process: ProcessSnapshot
     let indent: CGFloat
     let ability: QuitAbility
+    let onSelect: () -> Void
     let onQuit: () -> Void
 
-    @State private var showInfo = false
     @State private var isHovering = false
 
     var body: some View {
@@ -189,24 +196,25 @@ private struct ProcessRowView: View {
             NumberCell(text: ProcessFormat.runtime(process.elapsedSeconds), width: ProcessColumns.runtime)
 
             HStack(spacing: 10) {
-                Button {
-                    showInfo = true
-                } label: {
+                Button(action: onSelect) {
                     Image(systemName: "info.circle")
                         .font(.system(size: 12))
                         .foregroundStyle(.secondary)
                 }
                 .buttonStyle(.plain)
-                .popover(isPresented: $showInfo, arrowEdge: .trailing) { info }
+                .help(L10n.tr("详细信息", "Details", "Подробности"))
                 QuitControl(ability: ability, onQuit: onQuit)
             }
             .frame(width: ProcessColumns.actions, alignment: .trailing)
         }
         .padding(.horizontal, 16)
         .frame(height: ProcessColumns.rowHeight)
-        .background(isHovering ? Color.primary.opacity(0.06) : Color.clear)
+        .background(isHovering ? Color.primary.opacity(0.10) : Color.clear)
+        .contentShape(Rectangle())
+        .onTapGesture(perform: onSelect)
         .onHover { isHovering = $0 }
         .contextMenu {
+            Button(L10n.tr("详细信息…", "Details…", "Подробности…"), action: onSelect)
             Button(L10n.tr("在访达中显示", "Reveal in Finder", "Показать в Finder")) { reveal() }
             Button(L10n.tr("拷贝路径", "Copy Path", "Скопировать путь")) { copyPath() }
             if ability == .allowed {
@@ -214,37 +222,6 @@ private struct ProcessRowView: View {
                 Button(L10n.tr("退出…", "Quit…", "Завершить…"), action: onQuit)
             }
         }
-    }
-
-    private var info: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(process.name).font(.system(size: 13, weight: .semibold))
-            infoLine("PID", String(process.pid))
-            infoLine(L10n.tr("父进程", "Parent PID", "Родитель"), String(process.ppid))
-            infoLine(L10n.tr("用户", "User", "Пользователь"), ProcessFormat.userName(process.uid))
-            infoLine(L10n.tr("运行时间", "Run Time", "Время работы"), ProcessFormat.runtime(process.elapsedSeconds))
-            Text(process.executablePath)
-                .font(.system(size: 10).monospaced())
-                .foregroundStyle(.secondary)
-                .textSelection(.enabled)
-                .fixedSize(horizontal: false, vertical: true)
-            HStack {
-                Button(L10n.tr("在访达中显示", "Reveal in Finder", "Показать в Finder")) { reveal() }
-                Button(L10n.tr("拷贝路径", "Copy Path", "Скопировать путь")) { copyPath() }
-            }
-            .controlSize(.small)
-        }
-        .padding(14)
-        .frame(width: 340, alignment: .leading)
-    }
-
-    private func infoLine(_ label: String, _ value: String) -> some View {
-        HStack {
-            Text(label).foregroundStyle(.secondary)
-            Spacer()
-            Text(value).monospacedDigit()
-        }
-        .font(.system(size: 11))
     }
 
     private func reveal() {
@@ -262,6 +239,7 @@ private struct ProcessGroupRowView: View {
     let isExpanded: Bool
     let ability: QuitAbility
     let onToggle: () -> Void
+    let onSelect: () -> Void
     let onQuit: () -> Void
 
     @State private var isHovering = false
@@ -293,7 +271,14 @@ private struct ProcessGroupRowView: View {
             NumberCell(text: "", width: ProcessColumns.runtime)
 
             HStack(spacing: 10) {
-                if group.kind == .app {
+                if group.kind == .app, group.mainPID != nil {
+                    Button(action: onSelect) {
+                        Image(systemName: "info.circle")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                    .help(L10n.tr("详细信息", "Details", "Подробности"))
                     QuitControl(ability: ability, onQuit: onQuit)
                 }
             }
