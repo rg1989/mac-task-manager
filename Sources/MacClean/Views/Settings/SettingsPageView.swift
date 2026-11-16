@@ -17,7 +17,7 @@ struct SettingsPageView: View {
     }
 
     @AppStorage("showMenuBarWidget") private var showMenuBarWidget = true
-    @AppStorage(MenuBarMetric.defaultsKey, store: SharedAppState.defaults) private var menuBarMetricRaw = MenuBarMetric.diskFree.rawValue
+    @AppStorage(MenuBarMetric.defaultsKey, store: SharedAppState.defaults) private var menuBarMetricRaw = MenuBarMetric.fallback.rawValue
     @AppStorage("launchAtLogin") private var launchAtLogin = false
     @AppStorage("removeBackgroundColors") private var removeBackgroundColors = false
     @AppStorage("automaticUpdateChecks") private var automaticUpdateChecks = true

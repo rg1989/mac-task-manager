@@ -43,7 +43,7 @@ struct MacCleanMenuApp: App {
     @NSApplicationDelegateAdaptor(MenuAppDelegate.self) private var appDelegate
     @State private var model = MenuStatsModel.shared
     @AppStorage(AppLanguage.defaultsKey, store: SharedAppState.defaults) private var appLanguageRaw = AppLanguage.system.rawValue
-    @AppStorage(MenuBarMetric.defaultsKey, store: SharedAppState.defaults) private var menuBarMetricRaw = MenuBarMetric.diskFree.rawValue
+    @AppStorage(MenuBarMetric.defaultsKey, store: SharedAppState.defaults) private var menuBarMetricRaw = MenuBarMetric.fallback.rawValue
 
     private var appLanguage: AppLanguage {
         AppLanguage(rawValue: appLanguageRaw) ?? .fallback
@@ -53,7 +53,7 @@ struct MacCleanMenuApp: App {
     /// macOS automatically tints it to match the current menu bar appearance
     /// (dark in light mode, light in dark mode).
     private static let labelIcon: NSImage = {
-        let img = NSImage(systemSymbolName: "sparkles",
+        let img = NSImage(systemSymbolName: "waveform.path.ecg",
                           accessibilityDescription: "Task Manager")!
         img.isTemplate = true
         return img
@@ -80,11 +80,11 @@ struct MacCleanMenuApp: App {
                     .foregroundStyle(.primary)
                 if let stats = model.stats,
                    let value = MenuBarMetric.resolve(menuBarMetricRaw).formattedValue(
+                       cpuUsage: stats.cpuUsage,
                        diskFree: stats.diskFree,
                        gpuUsage: stats.gpuUsage,
-                       memoryUsage: stats.memoryTotal > 0
-                           ? Double(stats.memoryUsed) / Double(stats.memoryTotal)
-                           : 0,
+                       // Same number as the Memory ring in the dropdown.
+                       memoryUsage: stats.memoryPressure,
                        batteryTemperature: stats.batteryTemperature
                    ) {
                     Text(value)
@@ -99,9 +99,16 @@ struct MacCleanMenuApp: App {
 // MARK: - Palette
 
 enum MenuPalette {
-    static let bgTop = Color(red: 0.33, green: 0.18, blue: 0.55)
-    static let bgBottom = Color(red: 0.13, green: 0.08, blue: 0.28)
-    static let card = Color(red: 0.10, green: 0.07, blue: 0.22)
+    /// The main app's "Remove background colors" switch. It lives in the main
+    /// app's own defaults, which this helper reads by name. Read on each use:
+    /// the popover redraws with every stats tick, so a change shows within one.
+    static var isNeutral: Bool {
+        UserDefaults(suiteName: MCConstants.bundleIdentifier)?.bool(forKey: "removeBackgroundColors") ?? false
+    }
+    // Neutral values match the main app's dark neutral background.
+    static var bgTop: Color { isNeutral ? Color(red: 0.12, green: 0.12, blue: 0.14) : Color(red: 0.33, green: 0.18, blue: 0.55) }
+    static var bgBottom: Color { isNeutral ? Color(red: 0.16, green: 0.16, blue: 0.18) : Color(red: 0.13, green: 0.08, blue: 0.28) }
+    static var card: Color { isNeutral ? Color(red: 0.07, green: 0.07, blue: 0.08) : Color(red: 0.10, green: 0.07, blue: 0.22) }
     static let teal = Color(red: 0.40, green: 0.85, blue: 0.82)
     static let yellow = Color(red: 0.98, green: 0.82, blue: 0.30)
     static let green = Color(red: 0.24, green: 0.80, blue: 0.47)

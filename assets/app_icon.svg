@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" aria-label="Task Manager app icon">
+  <!-- Apple icon grid: 824x824 rounded rect centred on a transparent 1024 canvas. -->
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#343C4E"/>
+      <stop offset="1" stop-color="#151922"/>
+    </linearGradient>
+    <linearGradient id="line" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#3DDC84"/>
+      <stop offset="1" stop-color="#35D0E8"/>
+    </linearGradient>
+    <linearGradient id="area" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3DDC84" stop-opacity="0.38"/>
+      <stop offset="1" stop-color="#3DDC84" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect x="100" y="100" width="824" height="824" rx="186" fill="url(#tile)"/>
+  <!-- window -->
+  <rect x="196" y="212" width="632" height="600" rx="60" fill="#0B0E14" stroke="#FFFFFF" stroke-opacity="0.16" stroke-width="8"/>
+  <rect x="240" y="250" width="132" height="26" rx="13" fill="#FFFFFF" fill-opacity="0.30"/>
+  <path d="M200 312 H824" stroke="#FFFFFF" stroke-opacity="0.12" stroke-width="6"/>
+  <!-- grid -->
+  <g stroke="#FFFFFF" stroke-opacity="0.08" stroke-width="5">
+    <path d="M236 432 H788"/><path d="M236 552 H788"/><path d="M236 672 H788"/>
+    <path d="M374 336 V780"/><path d="M512 336 V780"/><path d="M650 336 V780"/>
+  </g>
+  <!-- performance graph -->
+  <path d="M236 690 L306 664 L366 704 L436 566 L494 612 L556 440 L614 524 L674 388 L730 470 L788 404 V776 H236 Z" fill="url(#area)"/>
+  <path d="M236 690 L306 664 L366 704 L436 566 L494 612 L556 440 L614 524 L674 388 L730 470 L788 404" fill="none" stroke="url(#line)" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

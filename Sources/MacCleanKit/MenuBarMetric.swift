@@ -5,6 +5,7 @@ import Foundation
 /// Raw values are persisted in the shared defaults suite, so they must remain
 /// stable across releases.
 public enum MenuBarMetric: String, CaseIterable, Identifiable, Sendable {
+    case cpuMemory = "cpuMemory"
     case diskFree = "diskFree"
     case gpuUsage = "gpuUsage"
     case memoryUsage = "memoryUsage"
@@ -12,7 +13,8 @@ public enum MenuBarMetric: String, CaseIterable, Identifiable, Sendable {
     case iconOnly = "iconOnly"
 
     public static let defaultsKey = "menuBarMetric"
-    public static let fallback: MenuBarMetric = .diskFree
+    // Fork default: a task manager shows load, not free disk space.
+    public static let fallback: MenuBarMetric = .cpuMemory
 
     public var id: String { rawValue }
 
@@ -22,6 +24,8 @@ public enum MenuBarMetric: String, CaseIterable, Identifiable, Sendable {
 
     public var localizedName: String {
         switch self {
+        case .cpuMemory:
+            L10n.tr("CPU 与内存", "CPU and memory")
         case .diskFree:
             L10n.tr("可用磁盘空间", "Free disk space")
         case .gpuUsage:
@@ -38,12 +42,16 @@ public enum MenuBarMetric: String, CaseIterable, Identifiable, Sendable {
     /// Formats the selected value without silently substituting another metric.
     /// `nil` means the menu bar shows the icon alone.
     public func formattedValue(
+        cpuUsage: Double? = nil,
         diskFree: UInt64,
         gpuUsage: Double?,
         memoryUsage: Double,
         batteryTemperature: Double?
     ) -> String? {
         switch self {
+        case .cpuMemory:
+            Self.formattedPercent(prefix: "CPU", value: cpuUsage)
+                + "  " + Self.formattedPercent(prefix: "RAM", value: memoryUsage)
         case .diskFree:
             FileSizeFormatter.format(diskFree)
         case .gpuUsage:

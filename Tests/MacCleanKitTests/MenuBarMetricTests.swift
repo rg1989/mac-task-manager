@@ -7,13 +7,18 @@ final class MenuBarMetricTests: XCTestCase {
     func testCasesAndRawValuesStayStable() {
         XCTAssertEqual(
             MenuBarMetric.allCases.map(\.rawValue),
-            ["diskFree", "gpuUsage", "memoryUsage", "temperature", "iconOnly"]
+            ["cpuMemory", "diskFree", "gpuUsage", "memoryUsage", "temperature", "iconOnly"]
         )
     }
 
-    func testMissingAndUnknownValuesFallBackToDisk() {
-        XCTAssertEqual(MenuBarMetric.resolve(nil), .diskFree)
-        XCTAssertEqual(MenuBarMetric.resolve("futureMetric"), .diskFree)
+    func testMissingAndUnknownValuesFallBackToCPUAndMemory() {
+        XCTAssertEqual(MenuBarMetric.resolve(nil), .cpuMemory)
+        XCTAssertEqual(MenuBarMetric.resolve("futureMetric"), .cpuMemory)
+        XCTAssertEqual(
+            MenuBarMetric.cpuMemory.formattedValue(
+                cpuUsage: 0.351, diskFree: 0, gpuUsage: nil, memoryUsage: 0.749, batteryTemperature: nil),
+            "CPU 35%  RAM 75%"
+        )
         XCTAssertEqual(MenuBarMetric.resolve("temperature"), .batteryTemperature)
         XCTAssertEqual(MenuBarMetric.resolve("iconOnly"), .iconOnly)
     }
