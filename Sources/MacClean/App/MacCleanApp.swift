@@ -13,6 +13,7 @@ struct MacCleanApp: App {
     @State private var showOnboarding = false
 
     init() {
+        if ScreenshotMode.isOn { ScreenshotMode.runAndExit() }
         AppLanguage.registerDefault(.system)
     }
 

@@ -8,6 +8,12 @@ Mirzaei. All cleanup, uninstall, disk and protection features come from
 Mac Sai and are unchanged. This fork adds the process dashboard and renames the
 app.
 
+![The Processes dashboard: system cards above the process list](assets/screenshots/processes.png)
+
+![Smart Scan and the cleanup tools in the sidebar](assets/screenshots/smart-scan.png)
+
+Both screenshots use sample data and the "Remove background colors" setting.
+
 ## What this fork adds
 
 - **Processes dashboard.** The first page of the app. Cards for CPU (per core),
@@ -22,8 +28,12 @@ app.
   and who started it. Quit one, or quit all leftovers at once.
 - **Details window.** Click a row to see live numbers, the parent process and
   the file location, with Quit, Force Quit and Restart buttons.
-- **Menu bar.** The dropdown keeps the CPU, memory, disk and battery rings in one
-  compact row and adds the top five processes.
+- **Menu bar.** The menu bar item shows CPU and memory use. Settings has other
+  choices, such as free disk space. The dropdown keeps the CPU, memory, disk and
+  battery rings in one compact row and adds the top five processes. It follows
+  the "Remove background colors" setting.
+- **Icon.** A window with a performance graph. The source is
+  `assets/app_icon.svg`.
 - **Real app names.** Rows show the name an app has in Finder, not the name of
   its program file.
 
@@ -110,6 +120,8 @@ tests and fails without Xcode.
 | `Sources/MacClean/Modules/Processes/` | Quit, Force Quit, Restart |
 | `Sources/ProcessSelfCheck/` | Runnable checks |
 | `scripts/fork-install.sh` | Build, sign, install |
+| `Sources/MacClean/App/ScreenshotMode.swift`, `scripts/readme-screenshots.sh` | Render the README screenshots off-screen with sample data |
+| `scripts/render-app-icon.swift` | Render `assets/app_icon.svg` to the icon master PNG |
 | `docs/superpowers/specs/` | Design notes |
 
 The program files inside the bundle keep Mac Sai's internal names, `MacClean`

@@ -177,7 +177,8 @@ public struct SidebarView: View {
     /// our own header rows with an always-visible chevron that fold on tap.
     /// Sections start folded so the sidebar opens on just Processes and Smart
     /// Scan; a section unfolds when the user opens it or a link lands in it.
-    @State private var collapsedSections: Set<SidebarSection> = Set(SidebarSection.allCases.filter { $0 != .main })
+    @State private var collapsedSections: Set<SidebarSection> =
+        ScreenshotMode.isOn ? [] : Set(SidebarSection.allCases.filter { $0 != .main })
 
     public init(selection: Binding<SidebarItem?>) {
         self._selection = selection

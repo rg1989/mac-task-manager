@@ -62,6 +62,16 @@ final class ProcessesViewModel {
 
     func start() {
         guard loop == nil else { return }
+        if ScreenshotMode.isOn {   // sample data, no sampling loop
+            processes = ScreenshotMode.processes
+            let sample = ScreenshotMode.cards
+            cards = sample
+            cpuHistory = ScreenshotMode.history(base: 0.3, swing: 0.12)
+            memoryHistory = ScreenshotMode.history(base: 0.66, swing: 0.04)
+            networkHistory = ScreenshotMode.history(base: 1_800_000, swing: 900_000)
+            hasLoaded = true
+            return
+        }
         loop = Task { [weak self] in
             while !Task.isCancelled {
                 await self?.tick()
@@ -139,6 +149,7 @@ enum ProcessFormat {
     private static var userNames: [UInt32: String] = [:]
 
     static func userName(_ uid: UInt32) -> String {
+        if ScreenshotMode.isOn { return uid == 0 ? "root" : ScreenshotMode.userName }
         if let cached = userNames[uid] { return cached }
         let name: String
         if let entry = getpwuid(uid), let raw = entry.pointee.pw_name {
