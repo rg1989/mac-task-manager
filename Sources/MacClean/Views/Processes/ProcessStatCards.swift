@@ -8,8 +8,8 @@ struct ProcessStatCards: View {
     let memoryHistory: [Double]
     let networkHistory: [Double]
 
-    private let cpuTint = Color(red: 0.45, green: 0.62, blue: 1.0)
-    private let memoryTint = Color(red: 1.0, green: 0.62, blue: 0.38)
+    private let cpuTint = ProcessFormat.cpuTint
+    private let memoryTint = ProcessFormat.memoryTint
     private let storageTint = Color(red: 0.70, green: 0.66, blue: 1.0)
     private let networkTint = Color(red: 0.40, green: 0.85, blue: 0.75)
 

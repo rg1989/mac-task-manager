@@ -150,6 +150,27 @@ enum ProcessFormat {
         return name
     }
 
+    // The dashboard cards and the details window share these tints.
+    static let cpuTint = Color(red: 0.45, green: 0.62, blue: 1.0)
+    static let memoryTint = Color(red: 1.0, green: 0.62, blue: 0.38)
+    static let timeTint = Color(red: 0.40, green: 0.85, blue: 0.75)
+    static let identityTint = Color(red: 0.70, green: 0.66, blue: 1.0)
+
+    /// Plain until a process is busy: orange from half a core, red from
+    /// about a full core.
+    static func cpuColor(_ percent: Double) -> Color {
+        if percent >= 90 { return .red }
+        if percent >= 50 { return .orange }
+        return .primary
+    }
+
+    /// Plain until a process is large: orange from 1.5 GB, red from 4 GB.
+    static func memoryColor(_ bytes: UInt64) -> Color {
+        if bytes >= 4 * 1_073_741_824 { return .red }
+        if bytes >= 3 * 536_870_912 { return .orange }
+        return .primary
+    }
+
     static func cpu(_ percent: Double) -> String {
         String(format: "%.1f%%", percent)
     }

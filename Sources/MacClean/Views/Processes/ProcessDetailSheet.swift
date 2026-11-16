@@ -93,12 +93,24 @@ struct ProcessDetailSheet: View {
                     .font(.system(size: 18, weight: .bold))
                     .lineLimit(1)
                     .truncationMode(.middle)
-                Text(subtitle)
-                    .font(.system(size: 12))
-                    .foregroundStyle(hasEnded ? Color.orange : Color.secondary)
+                HStack(spacing: 6) {
+                    Circle()
+                        .fill(statusColor)
+                        .frame(width: 7, height: 7)
+                    Text(subtitle)
+                        .font(.system(size: 12))
+                        .foregroundStyle(hasEnded ? Color.orange : Color.secondary)
+                }
             }
             Spacer()
         }
+    }
+
+    /// Green while it runs and can be managed, orange once it has ended,
+    /// grey for processes this app will not or cannot quit.
+    private var statusColor: Color {
+        if hasEnded { return .orange }
+        return ability == .allowed ? .green : .gray
     }
 
     private var subtitle: String {
@@ -135,12 +147,20 @@ struct ProcessDetailSheet: View {
 
     private var statsGrid: some View {
         LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3), spacing: 10) {
-            stat("CPU", ProcessFormat.cpu(current.cpuPercent))
-            stat(L10n.tr("内存", "Memory", "Память"), ProcessMemoryFormatter.format(current.memoryBytes))
-            stat(L10n.tr("运行时间", "Run Time", "Время работы"), ProcessFormat.runtime(current.elapsedSeconds))
-            stat("PID", String(current.pid))
-            stat(L10n.tr("父进程", "Parent PID", "Родитель"), parentText)
-            stat(L10n.tr("用户", "User", "Пользователь"), ProcessFormat.userName(current.uid))
+            stat("CPU", ProcessFormat.cpu(current.cpuPercent),
+                 icon: "cpu", tint: ProcessFormat.cpuTint,
+                 valueColor: ProcessFormat.cpuColor(current.cpuPercent))
+            stat(L10n.tr("内存", "Memory", "Память"), ProcessMemoryFormatter.format(current.memoryBytes),
+                 icon: "memorychip", tint: ProcessFormat.memoryTint,
+                 valueColor: ProcessFormat.memoryColor(current.memoryBytes))
+            stat(L10n.tr("运行时间", "Run Time", "Время работы"), ProcessFormat.runtime(current.elapsedSeconds),
+                 icon: "clock", tint: ProcessFormat.timeTint)
+            stat("PID", String(current.pid),
+                 icon: "number", tint: ProcessFormat.identityTint)
+            stat(L10n.tr("父进程", "Parent PID", "Родитель"), parentText,
+                 icon: "arrow.turn.left.up", tint: ProcessFormat.identityTint)
+            stat(L10n.tr("用户", "User", "Пользователь"), ProcessFormat.userName(current.uid),
+                 icon: "person", tint: ProcessFormat.identityTint)
         }
     }
 
@@ -151,25 +171,46 @@ struct ProcessDetailSheet: View {
         return String(current.ppid)
     }
 
-    private func stat(_ label: String, _ value: String) -> some View {
-        VStack(alignment: .leading, spacing: 3) {
-            Text(label)
-                .font(.system(size: 10, weight: .medium))
-                .foregroundStyle(.secondary)
+    private func stat(
+        _ label: String,
+        _ value: String,
+        icon: String,
+        tint: Color,
+        valueColor: Color = .primary
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 5) {
+                Image(systemName: icon)
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(tint)
+                Text(label)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(.secondary)
+            }
             Text(value)
                 .font(.system(size: 15, weight: .semibold).monospacedDigit())
+                .foregroundStyle(valueColor)
                 .lineLimit(1)
                 .truncationMode(.middle)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(10)
         .background(Color.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .overlay(alignment: .leading) {
+            // A thin bar in the value's colour marks a tile that needs attention.
+            if valueColor != .primary {
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(valueColor)
+                    .frame(width: 3)
+                    .padding(.vertical, 8)
+            }
+        }
     }
 
     private func appSummary(_ group: ProcessGroup) -> some View {
         HStack(spacing: 6) {
             Image(systemName: "square.stack.3d.up")
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.accentColor)
             Text(L10n.tr(
                 "\(group.name) 共 \(group.members.count) 个进程：CPU \(ProcessFormat.cpu(group.cpuPercent))，内存 \(ProcessMemoryFormatter.format(group.memoryBytes))",
                 "\(group.name) in total: \(group.members.count) processes, \(ProcessFormat.cpu(group.cpuPercent)) CPU, \(ProcessMemoryFormatter.format(group.memoryBytes)) memory",
@@ -209,6 +250,8 @@ struct ProcessDetailSheet: View {
             } label: {
                 Label(L10n.tr("退出", "Quit", "Завершить"), systemImage: "xmark.circle")
             }
+            .buttonStyle(.bordered)
+            .tint(.orange)
             .disabled(!canQuit)
 
             Button(role: .destructive) {
@@ -216,6 +259,8 @@ struct ProcessDetailSheet: View {
             } label: {
                 Label(L10n.tr("强制退出", "Force Quit", "Завершить принудительно"), systemImage: "bolt.circle")
             }
+            .buttonStyle(.bordered)
+            .tint(.red)
             .disabled(!canQuit)
 
             if let target = restartTarget {
@@ -227,6 +272,8 @@ struct ProcessDetailSheet: View {
                         systemImage: "arrow.clockwise.circle"
                     )
                 }
+                .buttonStyle(.bordered)
+                .tint(.blue)
                 .disabled(hasEnded || isWorking)
             }
 

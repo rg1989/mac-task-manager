@@ -115,5 +115,6 @@ final class MenuStatsModel {
 final class MenuAppDelegate: NSObject, @preconcurrency NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         MenuStatsModel.shared.start()
+        StatusItemMenu.shared.install()
     }
 }

@@ -151,6 +151,20 @@ struct MenuContentView: View {
             .padding(14)
         }
         .frame(width: 340)
+        // Right-click anywhere in the dropdown; the same menu opens from a
+        // right-click on the menu bar item (see StatusItemMenu).
+        .contextMenu {
+            Button(L10n.tr("打开 \(MCConstants.appName)", "Open \(MCConstants.appName)", "Открыть \(MCConstants.appName)")) {
+                MenuBarActions.openApp()
+            }
+            Button(L10n.tr("从菜单栏移除", "Remove from Menu Bar", "Убрать из строки меню")) {
+                MenuBarActions.removeFromMenuBar()
+            }
+            Divider()
+            Button(L10n.tr("退出 \(MCConstants.appName)", "Quit \(MCConstants.appName)", "Завершить \(MCConstants.appName)")) {
+                MenuBarActions.quitEverything()
+            }
+        }
     }
 
     // MARK: Header
@@ -293,17 +307,6 @@ struct MenuContentView: View {
                         .frame(width: 66, alignment: .trailing)
                 }
             }
-            Button {
-                TipAction.open(moduleID: "processes")
-            } label: {
-                Text(L10n.tr("打开进程", "Open Processes", "Открыть процессы"))
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(MenuPalette.textPrimary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 5)
-                    .background(Color.white.opacity(0.10), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-            }
-            .buttonStyle(.plain)
         }
         .padding(11)
         .glassCard()
@@ -427,43 +430,20 @@ struct MenuContentView: View {
     // MARK: Footer
 
     private var footer: some View {
-        VStack(spacing: 8) {
-            Button { TipAction.open() } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: "macwindow").font(.system(size: 11, weight: .semibold))
-                    Text(L10n.tr("打开 \(MCConstants.appName)", "Open \(MCConstants.appName)", "Открыть \(MCConstants.appName)"))
-                        .font(.system(size: 12, weight: .semibold))
-                }
-                .foregroundStyle(MenuPalette.textPrimary)
-                .frame(maxWidth: .infinity).padding(.vertical, 8)
-                .background(Color.white.opacity(0.14), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 9, style: .continuous)
-                        .strokeBorder(Color.white.opacity(0.10), lineWidth: 0.5)
-                }
-            }.buttonStyle(.plain)
-
-            // Says what it does. The old red power icon read as "shut down".
-            Button {
-                MenuBarKeepAlive.setUserQuit(true, defaults: SharedAppState.defaults)
-                NSApplication.shared.terminate(nil)
-            } label: {
-                HStack(spacing: 5) {
-                    Image(systemName: "menubar.rectangle").font(.system(size: 10))
-                    Text(L10n.tr("从菜单栏移除", "Remove from menu bar", "Убрать из строки меню"))
-                        .font(.system(size: 11))
-                }
-                .foregroundStyle(MenuPalette.textSecondary)
-                .frame(maxWidth: .infinity)
-                .contentShape(Rectangle())
+        Button { MenuBarActions.openApp() } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "macwindow").font(.system(size: 11, weight: .semibold))
+                Text(L10n.tr("打开 \(MCConstants.appName)", "Open \(MCConstants.appName)", "Открыть \(MCConstants.appName)"))
+                    .font(.system(size: 12, weight: .semibold))
             }
-            .buttonStyle(.plain)
-            .help(L10n.tr(
-                "关闭这个菜单栏监视器，\(MCConstants.appName) 应用不受影响。可在“设置”中重新打开。",
-                "Closes this menu bar monitor. The \(MCConstants.appName) app is not affected. Turn it back on in Settings.",
-                "Закрывает этот монитор в строке меню. Приложение \(MCConstants.appName) не затрагивается. Включить снова можно в настройках."
-            ))
-        }
+            .foregroundStyle(MenuPalette.textPrimary)
+            .frame(maxWidth: .infinity).padding(.vertical, 8)
+            .background(Color.white.opacity(0.14), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 9, style: .continuous)
+                    .strokeBorder(Color.white.opacity(0.10), lineWidth: 0.5)
+            }
+        }.buttonStyle(.plain)
     }
 
     // MARK: Helpers
