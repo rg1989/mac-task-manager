@@ -427,25 +427,42 @@ struct MenuContentView: View {
     // MARK: Footer
 
     private var footer: some View {
-        HStack(spacing: 8) {
+        VStack(spacing: 8) {
+            Button { TipAction.open() } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "macwindow").font(.system(size: 11, weight: .semibold))
+                    Text(L10n.tr("打开 \(MCConstants.appName)", "Open \(MCConstants.appName)", "Открыть \(MCConstants.appName)"))
+                        .font(.system(size: 12, weight: .semibold))
+                }
+                .foregroundStyle(MenuPalette.textPrimary)
+                .frame(maxWidth: .infinity).padding(.vertical, 8)
+                .background(Color.white.opacity(0.14), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 9, style: .continuous)
+                        .strokeBorder(Color.white.opacity(0.10), lineWidth: 0.5)
+                }
+            }.buttonStyle(.plain)
+
+            // Says what it does. The old red power icon read as "shut down".
             Button {
                 MenuBarKeepAlive.setUserQuit(true, defaults: SharedAppState.defaults)
                 NSApplication.shared.terminate(nil)
             } label: {
-                Image(systemName: "power").font(.system(size: 12, weight: .bold)).foregroundStyle(.white)
-                    .frame(width: 34, height: 32)
-                    .background(MenuPalette.red, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
-            }.buttonStyle(.plain).help(L10n.tr("退出监视器", "Quit Monitor", "Закрыть виджет"))
-
-            Button { TipAction.open() } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: "leaf.fill").font(.system(size: 11, weight: .bold))
-                    Text(L10n.tr("打开 \(MCConstants.appName)", "Open \(MCConstants.appName)", "Открыть \(MCConstants.appName)")).font(.system(size: 12, weight: .bold))
+                HStack(spacing: 5) {
+                    Image(systemName: "menubar.rectangle").font(.system(size: 10))
+                    Text(L10n.tr("从菜单栏移除", "Remove from menu bar", "Убрать из строки меню"))
+                        .font(.system(size: 11))
                 }
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity).padding(.vertical, 8)
-                .background(MenuPalette.green, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
-            }.buttonStyle(.plain)
+                .foregroundStyle(MenuPalette.textSecondary)
+                .frame(maxWidth: .infinity)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .help(L10n.tr(
+                "关闭这个菜单栏监视器，\(MCConstants.appName) 应用不受影响。可在“设置”中重新打开。",
+                "Closes this menu bar monitor. The \(MCConstants.appName) app is not affected. Turn it back on in Settings.",
+                "Закрывает этот монитор в строке меню. Приложение \(MCConstants.appName) не затрагивается. Включить снова можно в настройках."
+            ))
         }
     }
 
